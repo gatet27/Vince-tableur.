@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vince Sheets</title>
+<style>
+:root{
+  --blue:#0b6cff;
+  --blue-dark:#0959d9;
+  --blue-soft:#eaf3ff;
+  --bg:#eef4fb;
+  --panel:#ffffff;
+  --text:#16233a;
+  --muted:#738199;
+  --line:#cfd8e6;
+  --line2:#dfe6ef;
+  --shadow:0 12px 34px rgba(35,69,120,.12);
+}
+*{box-sizing:border-box}
+html,body{
+  margin:0;height:100%;overflow:hidden;
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  color:var(--text);
+  background:linear-gradient(180deg,#f8fbff,#edf3fb);
+}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.app{
+  height:100%;
+  display:grid;
+  grid-template-rows:auto auto auto 1fr auto;
+  gap:8px;
+  padding:10px;
+}
+.topbar,.ribbon,.formula,.bottom,.sheet-wrap{
+  background:rgba(255,255,255,.94);
+  border:1px solid #dbe3ee;
+  box-shadow:var(--shadow);
+}
+.topbar{
+  min-height:62px;border-radius:26px;
+  display:flex;align-items:center;gap:12px;padding:10px 14px;
+}
+.logo{
+  width:42px;height:42px;border-radius:50%;
+  display:grid;place-items:center;
+  background:linear-gradient(145deg,#0c73ff,#0a55d8);
+  color:white;font-weight:900;font-size:21px;
+  box-shadow:0 7px 18px rgba(11,108,255,.25);
+}
+.brand{font-weight:850;font-size:18px;letter-spacing:-.02em}
+.brand small{display:block;font-weight:600;font-size:11px;color:var(--muted);margin-top:2px}
+.top-actions{margin-left:auto;display:flex;gap:8px}
+.btn{
+  border:1px solid #d5deea;
+  border-radius:999px;
+  padding:9px 14px;
+  background:#f7f9fc;
+  color:#243451;
+  font-weight:750;
+  transition:.15s ease;
+}
+.btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(30,80,150,.12)}
+.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.ribbon{
+  border-radius:24px;
+  padding:8px 10px;
+  display:flex;
+  gap:8px;
+  overflow-x:auto;
+  align-items:center;
+}
+.group{
+  display:flex;align-items:center;gap:6px;
+  padding-right:8px;
+  border-right:1px solid #e2e8f0;
+}
+.group:last-child{border-right:0}
+.tool{
+  min-width:38px;height:38px;padding:0 11px;
+  border:1px solid #d6dfeb;border-radius:999px;
+  background:#f7f9fc;color:#263857;font-weight:800;
+}
+.tool:hover{background:#edf4ff;border-color:#b7d4ff;color:#075fd6}
+select.tool{padding:0 28px 0 12px}
+.formula{
+  border-radius:24px;
+  padding:8px 10px;
+  display:grid;
+  grid-template-columns:100px 44px 1fr;
+  gap:8px;
+  align-items:center;
+}
+.namebox,.formulabox{
+  border:1px solid #d5deea;
+  border-radius:999px;
+  background:#fff;
+  height:38px;
+  outline:none;
+}
+.namebox{padding:0 12px;text-align:center;font-weight:800}
+.fx{
+  height:38px;border:1px solid #d5deea;border-radius:999px;
+  display:grid;place-items:center;font-weight:900;font-style:italic;color:var(--blue)
+}
+.formulabox{padding:0 14px}
+.main{min-height:0;display:grid;grid-template-columns:1fr 320px;gap:8px}
+.sheet-wrap{border-radius:26px;overflow:hidden;min-height:0}
+.sheet-scroll{height:100%;overflow:auto;background:#f7faff}
+.sheet{
+  border-collapse:separate;
+  border-spacing:5px;
+  padding:7px;
+  min-width:max-content;
+}
+.sheet th,.sheet td{
+  min-width:100px;
+  height:34px;
+  border:1px solid #cfd7e3;
+  border-radius:999px;
+  background:#fff;
+  padding:6px 12px;
+  outline:none;
+  white-space:nowrap;
+  transition:.14s ease;
+}
+.sheet th{
+  position:sticky;top:0;z-index:4;
+  background:#eaf2fc;
+  color:#43516a;
+  text-align:center;font-size:12px;font-weight:850;
+}
+.sheet .rowhead{
+  position:sticky;left:0;z-index:3;
+  min-width:48px;width:48px;
+  background:#eaf2fc;
+  color:#43516a;
+  text-align:center;
+  font-size:12px;font-weight:850;
+}
+.sheet .corner{left:0;z-index:5}
+.sheet td[data-cell]{
+  cursor:text;
+}
+.sheet td[data-cell]:focus,
+.sheet td[data-cell].selected{
+  border-color:var(--blue);
+  box-shadow:0 0 0 2px rgba(11,108,255,.16),0 6px 16px rgba(11,108,255,.10);
+  transform:scale(1.015);
+  z-index:2;
+  position:relative;
+}
+.sheet td[data-cell].selected-row,
+.sheet td[data-cell].selected-col{
+  background:#f8fbff;
+}
+.sidebar{
+  border:1px solid #dbe3ee;
+  background:#fff;border-radius:26px;
+  box-shadow:var(--shadow);
+  display:flex;flex-direction:column;
+  min-height:0;overflow:hidden;
+}
+.ai-title{
+  padding:16px 16px 14px;
+  background:linear-gradient(135deg,#0a68ef,#277fff);
+  color:#fff;
+}
+.ai-title strong{font-size:19px}
+.ai-title small{display:block;margin-top:3px;opacity:.9}
+.ai-messages{
+  flex:1;overflow:auto;padding:12px;background:#f7faff;
+  display:flex;flex-direction:column;gap:8px;
+}
+.msg{
+  max-width:90%;
+  border-radius:18px;
+  padding:10px 12px;
+  line-height:1.4;
+  font-size:14px;
+}
+.msg.ai{align-self:flex-start;background:white;border:1px solid #dce5ef}
+.msg.user{align-self:flex-end;background:#0b6cff;color:white}
+.ai-compose{padding:10px;border-top:1px solid #e1e7ef;background:#fff}
+.ai-compose textarea{
+  width:100%;height:88px;resize:none;
+  border:1px solid #d4deea;border-radius:22px;
+  padding:12px;outline:none;
+}
+.ai-actions{display:flex;gap:8px;margin-top:8px}
+.bottom{
+  min-height:48px;border-radius:24px;
+  display:flex;align-items:center;gap:8px;padding:8px 10px;
+}
+.tabs{display:flex;gap:6px;overflow:auto;flex:1}
+.tab{
+  border:1px solid #d4deea;border-radius:999px;
+  background:#f6f9fc;padding:8px 13px;font-weight:750;color:#34445f;
+}
+.tab.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.status{font-size:12px;color:#7b8799;white-space:nowrap}
+.color-picker{display:none}
+@media(max-width:900px){
+  .main{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .sidebar.open{display:flex;position:fixed;right:10px;left:10px;bottom:68px;top:210px;z-index:20}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="logo">V</div>
+    <div class="brand">Vince Sheets<small>Tableur intelligent</small></div>
+    <div class="top-actions">
+      <button class="btn" id="newBtn">Nouveau</button>
+      <button class="btn" id="openBtn">Ouvrir CSV</button>
+      <button class="btn" id="saveBtn">Enregistrer</button>
+      <button class="btn primary" id="aiToggle">Vince IA</button>
+    </div>
+  </div>
+
+  <div class="ribbon">
+    <div class="group">
+      <button class="tool" id="undoBtn">↶</button>
+      <button class="tool" id="redoBtn">↷</button>
+    </div>
+    <div class="group">
+      <select class="tool" id="fontFamily">
+        <option>Inter</option>
+        <option>Arial</option>
+        <option>Georgia</option>
+        <option>Courier New</option>
+      </select>
+      <select class="tool" id="fontSize">
+        <option>10</option>
+        <option>11</option>
+        <option selected>12</option>
+        <option>14</option>
+        <option>16</option>
+        <option>20</option>
+      </select>
+    </div>
+    <div class="group">
+      <button class="tool" id="boldBtn">B</button>
+      <button class="tool" id="italicBtn">I</button>
+      <button class="tool" id="underlineBtn">U</button>
+      <button class="tool" id="textColorBtn">Texte</button>
+      <button class="tool" id="fillColorBtn">Fond</button>
+    </div>
+    <div class="group">
+      <button class="tool" id="leftBtn">Gauche</button>
+      <button class="tool" id="centerBtn">Centre</button>
+      <button class="tool" id="rightBtn">Droite</button>
+    </div>
+    <div class="group">
+      <button class="tool" id="currencyBtn">€</button>
+      <button class="tool" id="percentBtn">%</button>
+      <button class="tool" id="dateBtn">Date</button>
+    </div>
+    <div class="group">
+      <button class="tool" id="exportBtn">Exporter CSV</button>
+      <button class="tool" id="clearBtn">Effacer</button>
+      <button class="tool" id="addRowBtn">+ Ligne</button>
+      <button class="tool" id="addColBtn">+ Colonne</button>
+    </div>
+  </div>
+
+  <div class="formula">
+    <input class="namebox" id="nameBox" value="A1">
+    <div class="fx">fx</div>
+    <input class="formulabox" id="formulaBox" placeholder="Valeur ou formule : =SUM(A1:A10)">
+  </div>
+
+  <div class="main">
+    <div class="sheet-wrap">
+      <div class="sheet-scroll">
+        <table class="sheet" id="sheet"></table>
+      </div>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+      <div class="ai-title">
+        <strong>Vince IA</strong>
+        <small>Donne une consigne et le tableau l’exécute</small>
+      </div>
+      <div class="ai-messages" id="messages">
+        <div class="msg ai">Exemples : « remplis A1:A12 avec les mois », « remplis B1:B10 de 10 à 100 », « somme B1:B10 dans B11 », « mets C1:C10 en bleu ».</div>
+      </div>
+      <div class="ai-compose">
+        <textarea id="aiInput" placeholder="Écris ta consigne…"></textarea>
+        <div class="ai-actions">
+          <button class="btn primary" id="aiRun">Exécuter</button>
+          <button class="btn" id="aiExample">Exemple</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <button class="btn" id="addSheetBtn">+ Feuille</button>
+    <div class="tabs" id="tabs"></div>
+    <div class="status" id="status">Prêt</div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept=".csv,text/csv" hidden>
+<input type="color" id="textColorPicker" class="color-picker" value="#0b6cff">
+<input type="color" id="fillColorPicker" class="color-picker" value="#eaf3ff">
+
+<script>
+let rows=40, cols=18;
+let sheets=[makeSheet("Feuil1")];
+let currentSheet=0;
+let activeCell=null;
+let history=[], redoStack=[];
+
+const sheet=document.getElementById("sheet");
+const formulaBox=document.getElementById("formulaBox");
+const nameBox=document.getElementById("nameBox");
+const status=document.getElementById("status");
+
+function makeSheet(name){
+  return {name,data:{},styles:{}};
+}
+function colName(n){
+  let s="";
+  while(n>=0){s=String.fromCharCode(65+n%26)+s;n=Math.floor(n/26)-1}
+  return s;
+}
+function address(r,c){return colName(c)+(r+1)}
+function parseAddress(a){
+  const m=/^([A-Z]+)(\d+)$/i.exec((a||"").trim());
+  if(!m)return null;
+  let c=0;
+  for(const ch of m[1].toUpperCase())c=c*26+ch.charCodeAt(0)-64;
+  return {r:Number(m[2])-1,c:c-1};
+}
+function snapshot(){
+  history.push(JSON.stringify({sheets,rows,cols,currentSheet}));
+  if(history.length>60)history.shift();
+  redoStack=[];
+}
+function restore(raw){
+  const v=JSON.parse(raw);
+  sheets=v.sheets; rows=v.rows; cols=v.cols; currentSheet=v.currentSheet;
+  renderTabs(); renderSheet();
+}
+function renderTabs(){
+  const el=document.getElementById("tabs");
+  el.innerHTML="";
+  sheets.forEach((s,i)=>{
+    const b=document.createElement("button");
+    b.className="tab"+(i===currentSheet?" active":"");
+    b.textContent=s.name;
+    b.onclick=()=>{currentSheet=i;renderTabs();renderSheet()};
+    el.appendChild(b);
+  });
+}
+function renderSheet(){
+  sheet.innerHTML="";
+  const head=document.createElement("tr");
+  const corner=document.createElement("th");
+  corner.className="corner";
+  head.appendChild(corner);
+  for(let c=0;c<cols;c++){
+    const th=document.createElement("th");
+    th.textContent=colName(c);
+    head.appendChild(th);
+  }
+  sheet.appendChild(head);
+
+  for(let r=0;r<rows;r++){
+    const tr=document.createElement("tr");
+    const rh=document.createElement("td");
+    rh.className="rowhead";
+    rh.textContent=r+1;
+    tr.appendChild(rh);
+
+    for(let c=0;c<cols;c++){
+      const td=document.createElement("td");
+      td.contentEditable="true";
+      td.dataset.cell="1";
+      td.dataset.r=r;
+      td.dataset.c=c;
+      td.dataset.addr=address(r,c);
+      const raw=sheets[currentSheet].data[td.dataset.addr] ?? "";
+      td.dataset.raw=raw;
+      td.textContent=evaluate(raw);
+      applyStyle(td);
+
+      td.addEventListener("focus",()=>selectCell(td));
+      td.addEventListener("input",()=>{
+        td.dataset.raw=td.innerText;
+        sheets[currentSheet].data[td.dataset.addr]=td.dataset.raw;
+        formulaBox.value=td.dataset.raw;
+      });
+      td.addEventListener("keydown",e=>{
+        const rr=Number(td.dataset.r), cc=Number(td.dataset.c);
+        if(e.key==="Enter"){e.preventDefault();focusCell(Math.min(rr+1,rows-1),cc)}
+        if(e.key==="Tab"){e.preventDefault();focusCell(rr,Math.min(cc+1,cols-1))}
+      });
+      tr.appendChild(td);
+    }
+    sheet.appendChild(tr);
+  }
+  focusCell(0,0);
+}
+function focusCell(r,c){
+  const td=sheet.querySelector(`td[data-r="${r}"][data-c="${c}"]`);
+  if(td)td.focus();
+}
+function selectCell(td){
+  sheet.querySelectorAll(".selected").forEach(x=>x.classList.remove("selected"));
+  td.classList.add("selected");
+  activeCell=td;
+  nameBox.value=td.dataset.addr;
+  formulaBox.value=td.dataset.raw ?? td.innerText;
+  status.textContent=td.dataset.addr+" sélectionnée";
+}
+function applyStyle(td){
+  const s=sheets[currentSheet].styles[td.dataset.addr]||{};
+  Object.assign(td.style,s);
+}
+function saveStyle(td){
+  sheets[currentSheet].styles[td.dataset.addr]={
+    fontWeight:td.style.fontWeight,
+    fontStyle:td.style.fontStyle,
+    textDecoration:td.style.textDecoration,
+    fontFamily:td.style.fontFamily,
+    fontSize:td.style.fontSize,
+    color:td.style.color,
+    background:td.style.background,
+    textAlign:td.style.textAlign
+  };
+}
+function getRange(rng){
+  const p=rng.split(":");
+  const a=parseAddress(p[0]), b=parseAddress(p[1]||p[0]);
+  if(!a||!b)return [];
+  const out=[];
+  for(let r=Math.min(a.r,b.r);r<=Math.max(a.r,b.r);r++)
+    for(let c=Math.min(a.c,b.c);c<=Math.max(a.c,b.c);c++)
+      out.push(address(r,c));
+  return out;
+}
+function valueAt(a){
+  const raw=sheets[currentSheet].data[a] ?? "";
+  const v=evaluate(raw,true);
+  const n=parseFloat(String(v).replace(",","."));
+  return isNaN(n)?0:n;
+}
+function evaluate(raw,inner=false){
+  raw=String(raw??"");
+  if(!raw.startsWith("="))return raw;
+  let e=raw.slice(1);
+  try{
+    e=e.replace(/\bSUM\(([A-Z]+\d+:[A-Z]+\d+)\)/gi,(m,r)=>getRange(r).reduce((s,a)=>s+valueAt(a),0));
+    e=e.replace(/\bAVERAGE\(([A-Z]+\d+:[A-Z]+\d+)\)/gi,(m,r)=>{
+      const a=getRange(r);return a.length?a.reduce((s,x)=>s+valueAt(x),0)/a.length:0
+    });
+    e=e.replace(/\bMIN\(([A-Z]+\d+:[A-Z]+\d+)\)/gi,(m,r)=>Math.min(...getRange(r).map(valueAt)));
+    e=e.replace(/\bMAX\(([A-Z]+\d+:[A-Z]+\d+)\)/gi,(m,r)=>Math.max(...getRange(r).map(valueAt)));
+    e=e.replace(/\b([A-Z]+\d+)\b/g,(m)=>valueAt(m.toUpperCase()));
+    return Function(`"use strict";return (${e})`)();
+  }catch{
+    return inner?0:"#ERREUR";
+  }
+}
+function recalc(){
+  sheet.querySelectorAll("td[data-cell]").forEach(td=>{
+    const raw=sheets[currentSheet].data[td.dataset.addr] ?? td.dataset.raw ?? "";
+    td.dataset.raw=raw;
+    td.textContent=evaluate(raw);
+  });
+}
+formulaBox.addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&activeCell){
+    snapshot();
+    activeCell.dataset.raw=formulaBox.value;
+    sheets[currentSheet].data[activeCell.dataset.addr]=formulaBox.value;
+    recalc();
+    activeCell.focus();
+  }
+});
+nameBox.addEventListener("keydown",e=>{
+  if(e.key==="Enter"){
+    const p=parseAddress(nameBox.value);
+    if(p&&p.r<rows&&p.c<cols)focusCell(p.r,p.c);
+  }
+});
+
+document.getElementById("boldBtn").onclick=()=>toggleStyle("fontWeight","700");
+document.getElementById("italicBtn").onclick=()=>toggleStyle("fontStyle","italic");
+document.getElementById("underlineBtn").onclick=()=>toggleStyle("textDecoration","underline");
+function toggleStyle(k,v){
+  if(!activeCell)return;
+  snapshot();
+  activeCell.style[k]=activeCell.style[k]===v?"":v;
+  saveStyle(activeCell);
+}
+document.getElementById("fontFamily").onchange=e=>{
+  if(!activeCell)return;snapshot();activeCell.style.fontFamily=e.target.value;saveStyle(activeCell)
+}
+document.getElementById("fontSize").onchange=e=>{
+  if(!activeCell)return;snapshot();activeCell.style.fontSize=e.target.value+"px";saveStyle(activeCell)
+}
+document.getElementById("leftBtn").onclick=()=>align("left");
+document.getElementById("centerBtn").onclick=()=>align("center");
+document.getElementById("rightBtn").onclick=()=>align("right");
+function align(v){
+  if(!activeCell)return;snapshot();activeCell.style.textAlign=v;saveStyle(activeCell)
+}
+
+const textColorPicker=document.getElementById("textColorPicker");
+const fillColorPicker=document.getElementById("fillColorPicker");
+document.getElementById("textColorBtn").onclick=()=>textColorPicker.click();
+document.getElementById("fillColorBtn").onclick=()=>fillColorPicker.click();
+textColorPicker.oninput=e=>{
+  if(!activeCell)return;activeCell.style.color=e.target.value;saveStyle(activeCell)
+}
+fillColorPicker.oninput=e=>{
+  if(!activeCell)return;activeCell.style.background=e.target.value;saveStyle(activeCell)
+}
+
+document.getElementById("currencyBtn").onclick=()=>{
+  if(!activeCell)return;
+  const n=parseFloat(String(evaluate(activeCell.dataset.raw)).replace(",","."));
+  if(!isNaN(n)){activeCell.textContent=new Intl.NumberFormat("fr-FR",{style:"currency",currency:"EUR"}).format(n)}
+}
+document.getElementById("percentBtn").onclick=()=>{
+  if(!activeCell)return;
+  const n=parseFloat(String(evaluate(activeCell.dataset.raw)).replace(",","."));
+  if(!isNaN(n)){activeCell.textContent=(n*100).toFixed(2)+" %"}
+}
+document.getElementById("dateBtn").onclick=()=>{
+  if(!activeCell)return;snapshot();
+  const d=new Date().toLocaleDateString("fr-FR");
+  activeCell.dataset.raw=d;sheets[currentSheet].data[activeCell.dataset.addr]=d;activeCell.textContent=d
+}
+document.getElementById("clearBtn").onclick=()=>{
+  if(!activeCell)return;snapshot();
+  sheets[currentSheet].data[activeCell.dataset.addr]="";
+  activeCell.dataset.raw="";activeCell.textContent="";formulaBox.value="";
+}
+document.getElementById("addRowBtn").onclick=()=>{snapshot();rows+=10;renderSheet()}
+document.getElementById("addColBtn").onclick=()=>{snapshot();cols+=5;renderSheet()}
+
+document.getElementById("undoBtn").onclick=()=>{
+  if(!history.length)return;
+  redoStack.push(JSON.stringify({sheets,rows,cols,currentSheet}));
+  restore(history.pop());
+}
+document.getElementById("redoBtn").onclick=()=>{
+  if(!redoStack.length)return;
+  history.push(JSON.stringify({sheets,rows,cols,currentSheet}));
+  restore(redoStack.pop());
+}
+
+document.getElementById("newBtn").onclick=()=>{
+  if(confirm("Créer un nouveau classeur ?")){
+    snapshot();sheets=[makeSheet("Feuil1")];currentSheet=0;rows=40;cols=18;renderTabs();renderSheet()
+  }
+}
+document.getElementById("saveBtn").onclick=()=>{
+  localStorage.setItem("vinceSheets",JSON.stringify({sheets,rows,cols,currentSheet}));
+  status.textContent="Classeur enregistré";
+}
+document.getElementById("openBtn").onclick=()=>document.getElementById("fileInput").click();
+document.getElementById("fileInput").onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    snapshot();
+    const lines=String(r.result).split(/\r?\n/);
+    rows=Math.max(rows,lines.length);
+    lines.forEach((line,rr)=>{
+      const vals=line.split(",");
+      cols=Math.max(cols,vals.length);
+      vals.forEach((v,cc)=>sheets[currentSheet].data[address(rr,cc)]=v.replace(/^"|"$/g,""))
+    });
+    renderSheet();
+  };
+  r.readAsText(f);
+}
+document.getElementById("exportBtn").onclick=()=>{
+  const out=[];
+  for(let r=0;r<rows;r++){
+    const line=[];
+    for(let c=0;c<cols;c++){
+      const v=String(sheets[currentSheet].data[address(r,c)]??"").replaceAll('"','""');
+      line.push('"'+v+'"');
+    }
+    out.push(line.join(","));
+  }
+  const blob=new Blob([out.join("\n")],{type:"text/csv"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=sheets[currentSheet].name+".csv";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+document.getElementById("addSheetBtn").onclick=()=>{
+  snapshot();
+  sheets.push(makeSheet("Feuil"+(sheets.length+1)));
+  currentSheet=sheets.length-1;
+  renderTabs();renderSheet();
+}
+
+document.getElementById("aiToggle").onclick=()=>document.getElementById("sidebar").classList.toggle("open");
+document.getElementById("aiExample").onclick=()=>document.getElementById("aiInput").value="Remplis A1:A12 avec les mois et B1:B12 de 10 à 120";
+document.getElementById("aiRun").onclick=runAI;
+document.getElementById("aiInput").addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();runAI()}
+});
+function addMsg(t,who){
+  const d=document.createElement("div");
+  d.className="msg "+who;d.textContent=t;
+  document.getElementById("messages").appendChild(d);
+  d.scrollIntoView({behavior:"smooth"});
+}
+function runAI(){
+  const box=document.getElementById("aiInput");
+  const q=box.value.trim();if(!q)return;
+  addMsg(q,"user");box.value="";
+  snapshot();
+
+  let done=false;
+  const rangeMatch=q.match(/\b([A-Z]+\d+:[A-Z]+\d+)\b/i);
+  const rng=rangeMatch?rangeMatch[1].toUpperCase():null;
+
+  if(rng && /mois/i.test(q)){
+    const months=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+    getRange(rng).forEach((a,i)=>sheets[currentSheet].data[a]=months[i%12]);
+    done=true;
+  }
+  if(rng && /(?:de|du)\s*(-?\d+(?:[.,]\d+)?)\s*(?:à|jusqu.?à)\s*(-?\d+(?:[.,]\d+)?)/i.test(q)){
+    const m=q.match(/(?:de|du)\s*(-?\d+(?:[.,]\d+)?)\s*(?:à|jusqu.?à)\s*(-?\d+(?:[.,]\d+)?)/i);
+    const a=parseFloat(m[1].replace(",",".")), b=parseFloat(m[2].replace(",","."));
+    const cells=getRange(rng);
+    const step=cells.length>1?(b-a)/(cells.length-1):0;
+    cells.forEach((cell,i)=>sheets[currentSheet].data[cell]=String(a+i*step));
+    done=true;
+  }
+  const sum=q.match(/somme\s+(?:de\s+)?([A-Z]+\d+:[A-Z]+\d+)\s+(?:dans|en)\s+([A-Z]+\d+)/i);
+  if(sum){
+    sheets[currentSheet].data[sum[2].toUpperCase()]="=SUM("+sum[1].toUpperCase()+")";
+    done=true;
+  }
+  const avg=q.match(/moyenne\s+(?:de\s+)?([A-Z]+\d+:[A-Z]+\d+)\s+(?:dans|en)\s+([A-Z]+\d+)/i);
+  if(avg){
+    sheets[currentSheet].data[avg[2].toUpperCase()]="=AVERAGE("+avg[1].toUpperCase()+")";
+    done=true;
+  }
+  if(rng && /bleu/i.test(q)){
+    getRange(rng).forEach(a=>{
+      sheets[currentSheet].styles[a]={...(sheets[currentSheet].styles[a]||{}),background:"#eaf3ff",color:"#0b5fd7"}
+    });
+    done=true;
+  }
+
+  renderSheet();
+  addMsg(done?"C’est fait.":"Je n’ai pas reconnu cette consigne. Essaie une plage comme A1:A12 et une action simple : remplir, somme, moyenne ou couleur.","ai");
+}
+
+const saved=localStorage.getItem("vinceSheets");
+if(saved){
+  try{
+    const v=JSON.parse(saved);
+    sheets=v.sheets||sheets;rows=v.rows||rows;cols=v.cols||cols;currentSheet=v.currentSheet||0;
+  }catch{}
+}
+renderTabs();
+renderSheet();
+</script>
+</body>
+</html>
